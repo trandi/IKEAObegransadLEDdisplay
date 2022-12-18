@@ -1,4 +1,4 @@
-# IKEA Obegransad LED Display, controlled by an ESP32 board
+# IKEA OBEGRÄNSAD LED wall lamp, controlled by an ESP32 board
 
 
 
