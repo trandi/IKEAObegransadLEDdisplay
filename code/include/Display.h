@@ -1,7 +1,6 @@
 #pragma once
 
 #include <Arduino.h>
-// #include <SPI.h>
 
 #include <unordered_map>
 
@@ -46,8 +45,6 @@ class Display {
 
   uint8_t buffer_[ROWS][COLS];
 
-  // SPIClass spi_;
-
  public:
   explicit Display();
 
@@ -56,8 +53,9 @@ class Display {
   Display(Display&&) = delete;                  // remove move constructor
   Display& operator=(Display&&) = delete;  // remove move assignment operator
 
-  // grey value : 0 = off -> 255 fully on
+  // grey value : 0 = off -> 7 fully on
   void setPixel(uint8_t x, uint8_t y, uint8_t greyValue);
 
+  // does the 7 passes generating the 7 nuances of grey
   void refresh();
 };
