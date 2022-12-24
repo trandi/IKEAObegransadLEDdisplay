@@ -1,0 +1,42 @@
+http://www.lilygo.cn/prod_view.aspx?Id=1126
+
+https://github.com/Xinyuan-LilyGO/TTGO-T-Display
+
+https://docs.platformio.org/en/latest/boards/espressif32/ttgo-t1.html
+
+https://sites.google.com/site/jmaathuis/arduino/lilygo-ttgo-t-display-esp32
+
+
+Use C++20 : https://community.platformio.org/t/using-c-20-features-with-platformio-toolchain-gccarm/30139/4
+
+Add a "package.json":
+{
+  "name": "toolchain-xtensa-esp32",
+  "version": "11.2.0+2022r1",
+  "description": "GCC Toolchain for Espressif ESP32 Xtensa MCUs",
+  "keywords": [
+    "build tools",
+    "compiler",
+    "assembler",
+    "linker",
+    "preprocessor",
+    "espressif",
+    "esp32"
+  ],
+  "license": "GPL-2.0-or-later",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/espressif/crosstool-NG"
+  },
+  "system": "linux_x86_64"
+}
+
+
+
+
+SPI : 
+MISO  27  // GPIO27 -> NOT USED
+MOSI  26  // GPIO26 -> PIN_DATA / DI 3rd
+SCK   25  // GIPO25 -> PIN_CLK  / CLK 4th
+CS    33  // GPIO33 -> PIN_LATCH / CLA 5th 
+      32  // GPIO32 -> PIN_ENABLE / EN 2nd

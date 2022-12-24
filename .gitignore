@@ -1,3 +1,5 @@
-code/.pio
-code/.gitignore
+code/sdkconfig
+code/dependencies.lock
+code/components/*
+code/build/*
 code/.vscode/*
