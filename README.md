@@ -12,6 +12,7 @@
   - cmd_nvs
   - smc_system
 
+![Design](media/Design.png)
 
 To set up:
 - install [ESP-IDF v4.4](https://dl.espressif.com/dl/esp-idf/?idf=4.4)
