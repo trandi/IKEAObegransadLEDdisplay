@@ -3,4 +3,4 @@ code/dependencies.lock
 code/components/*
 code/build/*
 code/.vscode/*
-
+media/*.mp4
