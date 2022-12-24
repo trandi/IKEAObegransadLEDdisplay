@@ -20,3 +20,6 @@ To set up:
 - `idf.py fullclean`
 - `idf.py build`
 - `idf.py -p /dev/ttyUSB0 flash`
+
+
+## More and ability to see it in action [details on my blog](https://trandi.wordpress.com/2022/12/24/game-on-ikea-obergransad-led-display/)
