@@ -36,7 +36,8 @@ struct Display {
   Display& operator=(Display&&) = delete;  // remove move assignment operator
 
   // grey value : 0 = off -> MAX_GREY_LEVEL fully on
-  void setPixel(int x, int y, int greyValue);
+  // @return false if input out of range
+  bool setPixel(int x, int y, int greyValue);
 
   // does the MAX_GREY_LEVEL passes generating the nuances of grey
   void refresh();

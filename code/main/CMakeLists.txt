@@ -11,7 +11,7 @@ if(DEFINED ENV{BLUEPAD32_ARDUINO})
     list(APPEND requires "bluepad32_arduino" "arduino")
 endif()
 
-idf_component_register(SRCS "main.c" "main.cpp" "Display.cpp" "${srcs}"
+idf_component_register(SRCS "PingPong.cpp" "main.c" "main.cpp" "Display.cpp" "${srcs}"
                     INCLUDE_DIRS "."
                     REQUIRES "${requires}")
 

@@ -56,10 +56,16 @@ Display::Display() : orderToPosition_(convertPositions()) {
   pinMode(PIN_ENABLE, OUTPUT);
 }
 
-void Display::setPixel(int x, int y, int greyValue) {
-  auto actualX = min(x, COLS - 1);
-  auto actualY = min(y, ROWS - 1);
-  buffer_[actualX][actualY] = min(greyValue, MAX_GREY_LEVEL);
+bool Display::setPixel(int x, int y, int greyValue) {
+  // validate input
+  if (x < 0 || x >= COLS || y < 0 || y >= ROWS || greyValue < 0 ||
+      greyValue > MAX_GREY_LEVEL) {
+    return false;
+  }
+
+  buffer_[x][y] = greyValue;
+
+  return true;
 }
 
 void Display::refresh() {
