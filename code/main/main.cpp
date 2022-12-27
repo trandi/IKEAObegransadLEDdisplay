@@ -142,11 +142,11 @@ void loop() {
 
   if (joyLeft && joyLeft->isConnected()) {
     joyLeftDelta =
-        joyLeft->axisX() > 100 ? 1 : (joyLeft->axisX() < -100 ? -1 : 0);
+        joyLeft->axisX() > 100 ? -1 : (joyLeft->axisX() < -100 ? 1 : 0);
 
-    // Console.printf("0000 # LEFT X: %4d Y: %4d, RIGHT X: %4d Y: %4d \n",
-    //                joyLeft->axisX(), joyLeft->axisY(), joyLeft->axisRX(),
-    //                joyLeft->axisRY());
+    Console.printf("0000 # LEFT X: %4d Y: %4d, RIGHT X: %4d Y: %4d \n",
+                   joyLeft->axisX(), joyLeft->axisY(), joyLeft->axisRX(),
+                   joyLeft->axisRY());
 
     // auto x = myGamepad->axisX();
     // auto y = myGamepad->axisY();
@@ -168,9 +168,9 @@ void loop() {
   }
 
   if (joyRight && joyRight->isConnected()) {
-    // Console.printf("1111 # LEFT X: %4d Y: %4d, RIGHT X: %4d Y: %4d \n",
-    //                joyRight->axisX(), joyRight->axisY(), joyRight->axisRX(),
-    //                joyRight->axisRY());
+    Console.printf("1111 # LEFT X: %4d Y: %4d, RIGHT X: %4d Y: %4d \n",
+                   joyRight->axisX(), joyRight->axisY(), joyRight->axisRX(),
+                   joyRight->axisRY());
   }
 
   ppongGame.tick(joyLeftDelta, joyRightDelta);

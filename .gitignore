@@ -2,5 +2,5 @@ code/sdkconfig
 code/dependencies.lock
 code/components/*
 code/build/*
-code/.vscode/*
+**/.vscode/*
 media/*.mp4

@@ -77,3 +77,23 @@ void Display::refresh() {
     latch();
   }
 }
+
+void Display::off() {
+  for (int x = 0; x < COLS; x++) {
+    for (int y = 0; y < ROWS; y++) {
+      setPixel(x, y, 0);
+    }
+  }
+}
+
+void Display::turnOnHalf(bool left) {
+  for (int x = 0; x < COLS; x++) {
+    for (int y = 0; y < ROWS; y++) {
+      if (x <= COLS / 2) {
+        setPixel(x, y, left ? MAX_GREY_LEVEL : 0);
+      } else {
+        setPixel(x, y, left ? 0 : MAX_GREY_LEVEL);
+      }
+    }
+  }
+}

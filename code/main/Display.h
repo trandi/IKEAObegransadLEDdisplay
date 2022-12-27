@@ -39,6 +39,10 @@ struct Display {
   // @return false if input out of range
   bool setPixel(int x, int y, int greyValue);
 
+  void off();
+
+  void turnOnHalf(bool left);
+
   // does the MAX_GREY_LEVEL passes generating the nuances of grey
   void refresh();
 

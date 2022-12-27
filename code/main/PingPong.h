@@ -15,6 +15,7 @@ class Paddle {
   int pos_;
   int max_;      // max vertical size of the column
   int grey_{3};  // grey shade 0 .. Display::MAX_GREY_LEVEL
+  int speed_{0};
 
   void paint(int grey, std::shared_ptr<Display> display);
 
@@ -27,7 +28,11 @@ class Paddle {
   void move(int delta, std::shared_ptr<Display> display);
 
   bool contains(Pos point);
+
+  int speed() { return speed_; }
 };
+
+enum class BallTickResult { OK, LEFT_LOST, RIGHT_LOST };
 
 class Ball {
   Pos pos_;
@@ -48,9 +53,9 @@ class Ball {
   }
 
   // @return true if point lost
-  bool tick(std::shared_ptr<Paddle> leftPaddle,
-            std::shared_ptr<Paddle> rightPaddle,
-            std::shared_ptr<Display> display);
+  BallTickResult tick(std::shared_ptr<Paddle> leftPaddle,
+                      std::shared_ptr<Paddle> rightPaddle,
+                      std::shared_ptr<Display> display);
 
   void reset();
 };
@@ -59,11 +64,26 @@ class Score {
   int left_{0};
   int right_{0};
 
+  static constexpr int GREY{1};
+  static constexpr int MAX{5};
+
  public:
-  void incrementLeft();
-  void incrementRight();
+  // @returns true if end of game
+  bool incrementLeft() {
+    left_++;
+    return left_ == MAX;
+  }
+  bool incrementRight() {
+    right_++;
+    return right_ == MAX;
+  }
 
   void display(std::shared_ptr<Display> display);
+
+  void reset() {
+    left_ = 0;
+    right_ = 0;
+  }
 };
 
 class PingPongGame {
@@ -72,6 +92,7 @@ class PingPongGame {
   std::shared_ptr<Paddle> rightPaddle_;
   Pos max_;
   std::shared_ptr<Display> display_;
+  Score score_;
 
   static constexpr int PADDLE_SIZE{4};
 
@@ -84,4 +105,6 @@ class PingPongGame {
         display_{std::move(display)} {}
 
   void tick(int joyLeft, int joyRight);
+
+  void restart(bool leftWins);
 };
