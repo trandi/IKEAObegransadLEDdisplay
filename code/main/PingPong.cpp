@@ -2,7 +2,7 @@
 
 void Paddle::paint(int grey, std::shared_ptr<Display> display) {
   for (int i = pos_; i < pos_ + size_; i++) {
-    display->setPixel(col_, i, grey);
+    display->setPixel({col_, i}, grey);
   }
 }
 
@@ -19,58 +19,59 @@ void Paddle::move(int delta, std::shared_ptr<Display> display) {
 }
 
 bool Paddle::contains(Pos point) {
-  return point.x == col_ && point.y >= pos_ && point.y < pos_ + size_;
+  return point.c == col_ && point.r >= pos_ && point.r < pos_ + size_;
 }
 
 void Ball::reset() {
-  pos_ = Pos{.x = max_.x / 2, .y = max_.y / 2};
-  speed_ = Pos{.x = 1, .y = 0};
+  pos_ = Pos{.c = max_.c / 2, .r = max_.r / 2};
+  speed_ = Pos{.c = 1, .r = 0};
 }
 
 BallTickResult Ball::tick(std::shared_ptr<Paddle> leftPaddle,
                           std::shared_ptr<Paddle> rightPaddle,
                           std::shared_ptr<Display> display) {
-  display->setPixel(pos_.x, pos_.y, 0);  // remove
+  display->setPixel(pos_, 0);  // remove
 
-  Pos newPos{pos_.x + speed_.x, pos_.y + speed_.y};
+  Pos newPos{pos_ + speed_};
 
   // out on the sides -> point lost
-  if (newPos.x < 0) {
+  if (newPos.c < 0) {
     return BallTickResult::LEFT_LOST;
-  } else if (newPos.x >= max_.x) {
+  } else if (newPos.c >= max_.c) {
     return BallTickResult::RIGHT_LOST;
   }
 
-  // hit top/bottom walls -> bounce on Y axis
-  if (newPos.y < 0) {
-    newPos.y = 0;
-    speed_.y = -speed_.y;
+  // hit top/bottom walls -> bounce on Y axis / rows
+  if (newPos.r < 0) {
+    newPos.r = 0;
+    speed_.r = -speed_.r;
   }
-  if (newPos.y >= max_.y) {
-    newPos.y = max_.y - 1;
-    speed_.y = -speed_.y;
+  if (newPos.r >= max_.r) {
+    newPos.r = max_.r - 1;
+    speed_.r = -speed_.r;
   }
 
-  // hit paddles -> bounce on X axis
+  // hit paddles -> bounce on X axis / cols
   if (leftPaddle->contains(newPos)) {
-    newPos.x++;
-    speed_.x = -speed_.x;
-    speed_.y += leftPaddle->speed();
+    newPos.c++;
+    speed_.c = -speed_.c;
+    speed_.r += leftPaddle->speed();
   }
   if (rightPaddle->contains(newPos)) {
-    newPos.x--;
-    speed_.x = -speed_.x;
-    speed_.y += rightPaddle->speed();
+    newPos.c--;
+    speed_.c = -speed_.c;
+    speed_.r += rightPaddle->speed();
   }
 
   pos_ = newPos;
 
-  display->setPixel(pos_.x, pos_.y, 8);  // paint new
+  display->setPixel(pos_, 8);  // paint new
 
   return BallTickResult::OK;
 }
 
-void PingPongGame::tick(int joyLeft, int joyRight) {
+void PingPongGame::tick(int joyLeft, int joyRight, GamepadPtr gamePadLeft,
+                        GamepadPtr gamePadRight) {
   leftPaddle_->move(joyLeft, display_);
   rightPaddle_->move(joyRight, display_);
 
@@ -79,11 +80,11 @@ void PingPongGame::tick(int joyLeft, int joyRight) {
     ball_.reset();
     if (ballTickResult == BallTickResult::LEFT_LOST) {
       if (score_.incrementRight()) {
-        restart(false);
+        restart(false, gamePadRight);
       }
     } else {
       if (score_.incrementLeft()) {
-        restart(true);
+        restart(true, gamePadLeft);
       }
     }
 
@@ -93,22 +94,29 @@ void PingPongGame::tick(int joyLeft, int joyRight) {
 
 void Score::display(std::shared_ptr<Display> display) {
   for (int i = 0; i < left_; i++) {
-    display->setPixel(1 + i, 0, GREY);
+    display->setPixel({1 + i, 0}, GREY);
   }
 
   for (int i = 0; i < right_; i++) {
-    display->setPixel(Display::COLS - 2 - i, 0, GREY);
+    display->setPixel({Display::COLS - 2 - i, 0}, GREY);
   }
 }
 
-void PingPongGame::restart(bool leftWins) {
+void PingPongGame::restart(bool leftWins, GamepadPtr gamePad) {
   display_->off();
   delay(500);
   display_->turnOnHalf(leftWins);
+  if (gamePad) {
+    gamePad->setRumble(0xc0 /* force */, 0xc0 /* duration */);
+  }
   delay(500);
   display_->off();
+
   delay(500);
   display_->turnOnHalf(leftWins);
+  if (gamePad) {
+    gamePad->setRumble(0xc0 /* force */, 0xc0 /* duration */);
+  }
   delay(500);
   display_->off();
 

@@ -48,7 +48,7 @@ TaskHandle_t dispRefreshHandle;
 
 GamepadPtr myGamepads[BP32_MAX_GAMEPADS];
 auto display{std::make_shared<Display>()};
-PingPongGame ppongGame{Pos{Display::COLS, Display::ROWS}, display};
+PingPongGame ppongGame{{Display::COLS, Display::ROWS}, display};
 
 void dispRefresh(void* arg) {
   Console.printf("~~~~~ Display refresh running on core: %d\n",
@@ -102,6 +102,23 @@ void onDisconnectedGamepad(GamepadPtr gp) {
   }
 }
 
+namespace {
+
+int delta(GamepadPtr gamePad) {
+  if (gamePad->dpad() & DPAD_UP || gamePad->dpad() & DPAD_LEFT ||
+      gamePad->x()) {
+    return 1;
+  }
+  if (gamePad->dpad() & DPAD_DOWN || gamePad->dpad() & DPAD_RIGHT ||
+      gamePad->b()) {
+    return -1;
+  }
+
+  return 0;
+}
+
+}  // namespace
+
 /*******************************************************************************/
 
 // ****** Arduino setup function. Will run on CPU 1
@@ -135,18 +152,17 @@ void loop() {
   // automatically.
   BP32.update();
 
-  GamepadPtr joyLeft = myGamepads[0];
-  GamepadPtr joyRight = myGamepads[1];
+  GamepadPtr gamePadLeft = myGamepads[0];
+  GamepadPtr gamePadRight = myGamepads[1];
 
-  int joyLeftDelta{0}, joyRightDelta{0};
+  int leftDelta{0}, rightDelta{0};
 
-  if (joyLeft && joyLeft->isConnected()) {
-    joyLeftDelta =
-        joyLeft->axisX() > 100 ? -1 : (joyLeft->axisX() < -100 ? 1 : 0);
+  if (gamePadLeft && gamePadLeft->isConnected()) {
+    leftDelta = delta(gamePadLeft);
 
-    Console.printf("0000 # LEFT X: %4d Y: %4d, RIGHT X: %4d Y: %4d \n",
-                   joyLeft->axisX(), joyLeft->axisY(), joyLeft->axisRX(),
-                   joyLeft->axisRY());
+    // Console.printf("0000 # LEFT X: %4d Y: %4d, RIGHT X: %4d Y: %4d \n",
+    //                gamePadLeft->axisX(), gamePadLeft->axisY(),
+    //                gamePadLeft->axisRX(), gamePadLeft->axisRY());
 
     // auto x = myGamepad->axisX();
     // auto y = myGamepad->axisY();
@@ -167,13 +183,29 @@ void loop() {
     // }
   }
 
-  if (joyRight && joyRight->isConnected()) {
-    Console.printf("1111 # LEFT X: %4d Y: %4d, RIGHT X: %4d Y: %4d \n",
-                   joyRight->axisX(), joyRight->axisY(), joyRight->axisRX(),
-                   joyRight->axisRY());
+  if (gamePadRight && gamePadRight->isConnected()) {
+    // Console.printf("1111 # LEFT X: %4d Y: %4d, RIGHT X: %4d Y: %4d \n",
+    //                gamePadRight->axisX(), gamePadRight->axisY(),
+    //                gamePadRight->axisRX(), gamePadRight->axisRY());
+
+    Console.printf(
+        "dpad: 0x%02x, buttons: 0x%04x, axis L: %4d, %4d, axis R: %4d, "
+        "%4d, brake: %4d, throttle: %4d, misc: 0x%02x\n",
+        gamePadRight->dpad(),        // DPAD
+        gamePadRight->buttons(),     // bitmask of pressed buttons
+        gamePadRight->axisX(),       // (-511 - 512) left X Axis
+        gamePadRight->axisY(),       // (-511 - 512) left Y axis
+        gamePadRight->axisRX(),      // (-511 - 512) right X axis
+        gamePadRight->axisRY(),      // (-511 - 512) right Y axis
+        gamePadRight->brake(),       // (0 - 1023): brake button
+        gamePadRight->throttle(),    // (0 - 1023): throttle (AKA gas) button
+        gamePadRight->miscButtons()  // bitmak of pressed "misc" buttons
+    );
+
+    rightDelta = delta(gamePadRight);
   }
 
-  ppongGame.tick(joyLeftDelta, joyRightDelta);
+  ppongGame.tick(leftDelta, rightDelta, gamePadLeft, gamePadRight);
 
   delay(100);
 }

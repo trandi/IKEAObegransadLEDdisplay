@@ -1,13 +1,10 @@
 #pragma once
 
+#include <Bluepad32.h>
+
 #include <memory>
 
 #include "Display.h"
-
-struct Pos {
-  int x;
-  int y;
-};
 
 class Paddle {
   int size_;
@@ -98,13 +95,14 @@ class PingPongGame {
 
  public:
   explicit PingPongGame(Pos max, std::shared_ptr<Display> display)
-      : ball_{max, 0, max.x - 1, PADDLE_SIZE},
-        leftPaddle_{std::make_shared<Paddle>(PADDLE_SIZE, 0, max.y)},
-        rightPaddle_{std::make_shared<Paddle>(PADDLE_SIZE, max.x - 1, max.y)},
+      : ball_{max, 0, max.r - 1, PADDLE_SIZE},
+        leftPaddle_{std::make_shared<Paddle>(PADDLE_SIZE, 0, max.c)},
+        rightPaddle_{std::make_shared<Paddle>(PADDLE_SIZE, max.r - 1, max.c)},
         max_{std::move(max)},
         display_{std::move(display)} {}
 
-  void tick(int joyLeft, int joyRight);
+  void tick(int joyLeft, int joyRight, GamepadPtr gamePadLeft,
+            GamepadPtr gamePadRight);
 
-  void restart(bool leftWins);
+  void restart(bool leftWins, GamepadPtr gamePadt);
 };

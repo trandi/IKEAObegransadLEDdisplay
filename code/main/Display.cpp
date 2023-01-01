@@ -14,13 +14,13 @@ constexpr uint8_t PIN_CLK{25};
 constexpr uint8_t PIN_LATCH{33};
 constexpr uint8_t PIN_ENABLE{32};
 
-std::unordered_map<int, std::pair<int, int>> convertPositions() {
-  std::unordered_map<int, std::pair<int, int>> orderToPosition;
+std::unordered_map<int, Pos> convertPositions() {
+  std::unordered_map<int, Pos> orderToPosition;
 
-  for (int r = 0; r < Display::ROWS; r++) {
-    for (int c = 0; c < Display::COLS; c++) {
-      auto order = Display::POSITIONS[r * Display::COLS + c];
-      orderToPosition[order] = {r, c};
+  for (int c = 0; c < Display::COLS; c++) {
+    for (int r = 0; r < Display::ROWS; r++) {
+      auto order = Display::POSITIONS[c * Display::ROWS + r];
+      orderToPosition[order] = {c, r};
     }
   }
 
@@ -33,15 +33,14 @@ void latch() {
   // delayMicroseconds(10);
 }
 
-void sendData(
-    std::vector<std::vector<int>>& buff,
-    const std::unordered_map<int, std::pair<int, int>>& orderToPosition) {
+void sendData(std::vector<std::vector<int>>& buff,
+              const std::unordered_map<int, Pos>& orderToPosition) {
   auto rows = buff.size();
   auto cols = rows > 0 ? buff[0].size() : 0;
 
   for (size_t i = 0; i < rows * cols; i++) {
-    const auto& [r, c] = orderToPosition.at(i);
-    digitalWrite(PIN_DATA, buff[r][c] > 0 ? buff[r][c]-- : 0);
+    const auto& pos = orderToPosition.at(i);
+    digitalWrite(PIN_DATA, buff[pos.c][pos.r] > 0 ? buff[pos.c][pos.r]-- : 0);
     digitalWrite(PIN_CLK, HIGH);
     digitalWrite(PIN_CLK, LOW);
   }
@@ -56,14 +55,14 @@ Display::Display() : orderToPosition_(convertPositions()) {
   pinMode(PIN_ENABLE, OUTPUT);
 }
 
-bool Display::setPixel(int x, int y, int greyValue) {
+bool Display::setPixel(Pos pos, int greyValue) {
   // validate input
-  if (x < 0 || x >= COLS || y < 0 || y >= ROWS || greyValue < 0 ||
-      greyValue > MAX_GREY_LEVEL) {
+  if (pos.r < 0 || pos.r >= ROWS || pos.c < 0 || pos.c >= COLS ||
+      greyValue < 0 || greyValue > MAX_GREY_LEVEL) {
     return false;
   }
 
-  buffer_[x][y] = greyValue;
+  buffer_[pos.c][pos.r] = greyValue;
 
   return true;
 }
@@ -79,21 +78,35 @@ void Display::refresh() {
 }
 
 void Display::off() {
-  for (int x = 0; x < COLS; x++) {
-    for (int y = 0; y < ROWS; y++) {
-      setPixel(x, y, 0);
+  for (int c = 0; c < COLS; c++) {
+    for (int r = 0; r < ROWS; r++) {
+      setPixel({c, r}, 0);
     }
   }
 }
 
 void Display::turnOnHalf(bool left) {
-  for (int x = 0; x < COLS; x++) {
-    for (int y = 0; y < ROWS; y++) {
-      if (x <= COLS / 2) {
-        setPixel(x, y, left ? MAX_GREY_LEVEL : 0);
+  for (int c = 0; c < COLS; c++) {
+    for (int r = 0; r < ROWS; r++) {
+      if (c <= COLS / 2) {
+        setPixel({c, r}, left ? 1 : 0);
       } else {
-        setPixel(x, y, left ? 0 : MAX_GREY_LEVEL);
+        setPixel({c, r}, left ? 0 : 1);
       }
     }
   }
+}
+
+Pos Pos::operator+(Pos another) {
+  return {.c = c + another.c, .r = r + another.r};
+}
+
+Pos Pos::operator()(Direction dir) {
+  switch (dir) {
+    case Direction::UP:
+      return {.c = c, .r = r - 1};
+
+    default:
+      return *this;
+  };
 }

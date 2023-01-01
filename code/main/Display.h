@@ -4,6 +4,17 @@
 
 #include <unordered_map>
 
+enum class Direction { UP, DOWN, LEFT, RIGHT, NONE };
+
+struct Pos {
+  int c;
+  int r;
+
+  Pos operator()(Direction dir);
+
+  Pos operator+(Pos another);
+};
+
 struct Display {
   constexpr static int MAX_GREY_LEVEL{8};
   constexpr static int ROWS{16}, COLS{16};
@@ -37,7 +48,7 @@ struct Display {
 
   // grey value : 0 = off -> MAX_GREY_LEVEL fully on
   // @return false if input out of range
-  bool setPixel(int x, int y, int greyValue);
+  bool setPixel(Pos pos, int greyValue);
 
   void off();
 
@@ -46,10 +57,11 @@ struct Display {
   // does the MAX_GREY_LEVEL passes generating the nuances of grey
   void refresh();
 
+
  private:
 
   // order in which needs to be sent to the display -> (row, col)
-  const std::unordered_map<int, std::pair<int, int>>
+  const std::unordered_map<int, Pos>
       orderToPosition_;
 
   std::vector<std::vector<int>> buffer_{ROWS, std::vector<int>(COLS, 0)};
