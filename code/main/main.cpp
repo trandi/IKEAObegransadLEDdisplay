@@ -13,43 +13,15 @@
 #include "PingPong.h"
 #include "Snake.h"
 
-// struct Ball {
-//   explicit Ball(std::shared_ptr<Display> disp) : display(std::move(disp)) {
-//     display->setPixel(x, y, colour);
-//   }
-
-//   void move(int deltaX, int deltaY) {
-//     display->setPixel(x, y, 0);
-//     x = constrain(x + deltaX, 0, Display::COLS - 1);
-//     y = constrain(y + deltaY, 0, Display::ROWS - 1);
-//     display->setPixel(x, y, colour);
-//   }
-
-//   void darken() {
-//     colour = min(colour + 1, Display::MAX_GREY_LEVEL);
-//     display->setPixel(x, y, colour);
-//   }
-
-//   void lighten() {
-//     colour = max(colour - 1, 0);
-//     display->setPixel(x, y, colour);
-//   }
-
-//  private:
-//   int x{0};
-//   int y{0};
-//   int colour{Display::MAX_GREY_LEVEL};
-//   std::shared_ptr<Display> display;
-// };
-
-constexpr int BUTTON_A_MASK{0x01};
-constexpr int BUTTON_B_MASK{0x04};
-
 TaskHandle_t dispRefreshHandle;
 
 GamepadPtr myGamepads[BP32_MAX_GAMEPADS];
 std::shared_ptr<IDisplay> display{std::make_shared<ObegransadDisplay>()};
-auto game = std::make_shared<SnakeGame>(display);
+std::vector<std::shared_ptr<IGame>> games{
+    std::make_shared<PingPongGame>(display),
+    std::make_shared<SnakeGame>(display)};
+int gameIdx{0};
+time_t lastGameChange{time(nullptr)};
 
 void dispRefresh(void* arg) {
   Console.printf("~~~~~ Display refresh running on core: %d\n",
@@ -106,18 +78,20 @@ void onDisconnectedGamepad(GamepadPtr gp) {
 namespace {
 
 Direction dPadDirection(GamepadPtr gamePad) {
-  if (gamePad->dpad() & DPAD_UP || gamePad->x()) {
-    return Direction::UP;
-  }
-  if (gamePad->dpad() & DPAD_DOWN || gamePad->b()) {
-    return Direction::DOWN;
-  }
+  if (gamePad && gamePad->isConnected()) {
+    if (gamePad->dpad() & DPAD_UP || gamePad->x()) {
+      return Direction::UP;
+    }
+    if (gamePad->dpad() & DPAD_DOWN || gamePad->b()) {
+      return Direction::DOWN;
+    }
 
-  if (gamePad->dpad() & DPAD_LEFT || gamePad->y()) {
-    return Direction::LEFT;
-  }
-  if (gamePad->dpad() & DPAD_RIGHT || gamePad->a()) {
-    return Direction::RIGHT;
+    if (gamePad->dpad() & DPAD_LEFT || gamePad->y()) {
+      return Direction::LEFT;
+    }
+    if (gamePad->dpad() & DPAD_RIGHT || gamePad->a()) {
+      return Direction::RIGHT;
+    }
   }
 
   return Direction::NONE;
@@ -148,12 +122,12 @@ void setup() {
                           10,                 /* Priority of the task */
                           &dispRefreshHandle, /* Task handle. */
                           1); /* Core where the task should run */
+
+  games[gameIdx]->init();
 }
 
 // ****** Arduino loop function. Will run on CPU 1
 void loop() {
-  // This call fetches all the gamepad info from the NINA (ESP32) module.
-  // Just call this function in your main loop.
   // The gamepads pointer (the ones received in the callbacks) gets updated
   // automatically.
   BP32.update();
@@ -161,57 +135,19 @@ void loop() {
   GamepadPtr gamePadLeft = myGamepads[0];
   GamepadPtr gamePadRight = myGamepads[1];
 
-  Direction leftDir{Direction::NONE}, rightDir{Direction::NONE};
-
+  // change game ?
   if (gamePadLeft && gamePadLeft->isConnected()) {
-    leftDir = dPadDirection(gamePadLeft);
+    // at least 3 secs since last game change
+    if (gamePadLeft->miscSystem() && (time(nullptr) > (lastGameChange + 3))) {
+      gameIdx = (gameIdx + 1) % games.size();
+      games[gameIdx]->init();
 
-    // Console.printf("0000 # LEFT X: %4d Y: %4d, RIGHT X: %4d Y: %4d \n",
-    //                gamePadLeft->axisX(), gamePadLeft->axisY(),
-    //                gamePadLeft->axisRX(), gamePadLeft->axisRY());
-
-    // auto x = myGamepad->axisX();
-    // auto y = myGamepad->axisY();
-
-    // auto deltaX = x > 100 ? -1 : (x < -100 ? 1 : 0);
-    // auto deltaY = y > 100 ? 1 : (y < -100 ? -1 : 0);
-
-    // if (deltaX != 0 || deltaY != 0) {
-    //   Console.printf("~~~~~ MOVE: (%d, %d)\n", deltaX, deltaY);
-    //   ball.move(deltaX, deltaY);
-    // }
-
-    // if (myGamepad->buttons() & BUTTON_A_MASK) {
-    //   ball.darken();
-    // }
-    // if (myGamepad->buttons() & BUTTON_B_MASK) {
-    //   ball.lighten();
-    // }
+      lastGameChange = time(nullptr);
+    }
   }
 
-  if (gamePadRight && gamePadRight->isConnected()) {
-    // Console.printf("1111 # LEFT X: %4d Y: %4d, RIGHT X: %4d Y: %4d \n",
-    //                gamePadRight->axisX(), gamePadRight->axisY(),
-    //                gamePadRight->axisRX(), gamePadRight->axisRY());
-
-    Console.printf(
-        "dpad: 0x%02x, buttons: 0x%04x, axis L: %4d, %4d, axis R: %4d, "
-        "%4d, brake: %4d, throttle: %4d, misc: 0x%02x\n",
-        gamePadRight->dpad(),        // DPAD
-        gamePadRight->buttons(),     // bitmask of pressed buttons
-        gamePadRight->axisX(),       // (-511 - 512) left X Axis
-        gamePadRight->axisY(),       // (-511 - 512) left Y axis
-        gamePadRight->axisRX(),      // (-511 - 512) right X axis
-        gamePadRight->axisRY(),      // (-511 - 512) right Y axis
-        gamePadRight->brake(),       // (0 - 1023): brake button
-        gamePadRight->throttle(),    // (0 - 1023): throttle (AKA gas) button
-        gamePadRight->miscButtons()  // bitmak of pressed "misc" buttons
-    );
-
-    rightDir = dPadDirection(gamePadRight);
-  }
-
-  game->tick(leftDir, rightDir, gamePadLeft, gamePadRight);
+  games[gameIdx]->tick(dPadDirection(gamePadLeft), dPadDirection(gamePadRight),
+                       gamePadLeft, gamePadRight);
 
   delay(100);
 }

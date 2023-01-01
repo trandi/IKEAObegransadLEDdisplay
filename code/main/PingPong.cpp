@@ -41,6 +41,8 @@ bool Paddle::contains(Pos point) {
   return point.c == col_ && point.r >= pos_ && point.r < pos_ + size_;
 }
 
+void Paddle::reset() { pos_ = {(max_ - size_) / 2}; }
+
 void Ball::reset() {
   pos_ = Pos{.c = max_.c / 2, .r = max_.r / 2};
   speed_ = Pos{.c = 1, .r = 0};
@@ -84,7 +86,7 @@ BallTickResult Ball::tick(std::shared_ptr<Paddle> leftPaddle,
 
   pos_ = newPos;
 
-  display->setPixel(pos_, 8);  // paint new
+  display->setPixel(pos_, display->maxGrey());  // paint new
 
   return BallTickResult::OK;
 }
@@ -99,11 +101,11 @@ void PingPongGame::tick(Direction joyLeft, Direction joyRight,
     ball_.reset();
     if (ballTickResult == BallTickResult::LEFT_LOST) {
       if (score_.incrementRight()) {
-        restart(false, gamePadRight);
+        finish(false, gamePadRight);
       }
     } else {
       if (score_.incrementLeft()) {
-        restart(true, gamePadLeft);
+        finish(true, gamePadLeft);
       }
     }
 
@@ -123,23 +125,31 @@ void Score::display(std::shared_ptr<IDisplay> display) {
   }
 }
 
-void PingPongGame::restart(bool leftWins, GamepadPtr gamePad) {
-  display_->off();
-  delay(500);
-  display_->turnOnHalf(leftWins);
-  if (gamePad) {
-    gamePad->setRumble(0xc0 /* force */, 0xc0 /* duration */);
-  }
-  delay(500);
+void PingPongGame::init() {
   display_->off();
 
-  delay(500);
-  display_->turnOnHalf(leftWins);
-  if (gamePad) {
-    gamePad->setRumble(0xc0 /* force */, 0xc0 /* duration */);
-  }
-  delay(500);
-  display_->off();
-
+  ball_.reset();
+  leftPaddle_->reset();
+  rightPaddle_->reset();
   score_.reset();
+}
+
+void PingPongGame::finish(bool leftWins, GamepadPtr gamePad) {
+  display_->off();
+  delay(500);
+  display_->turnOnHalf(leftWins);
+  if (gamePad) {
+    gamePad->setRumble(0xc0 /* force */, 0xc0 /* duration */);
+  }
+  delay(500);
+  display_->off();
+
+  delay(500);
+  display_->turnOnHalf(leftWins);
+  if (gamePad) {
+    gamePad->setRumble(0xc0 /* force */, 0xc0 /* duration */);
+  }
+  delay(500);
+
+  init();
 }

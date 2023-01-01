@@ -1,7 +1,7 @@
 #include "Snake.h"
 
-void SnakeGame::tick(Direction dir, Direction /*rightDir*/,
-                     GamepadPtr /*gamePadLeft*/, GamepadPtr /*gamePadRight*/) {
+void SnakeGame::tick(Direction dir, Direction /*rightDir*/, GamepadPtr gamePad,
+                     GamepadPtr /*gamePadRight*/) {
   if (dir != Direction::NONE) {
     dir_ = dir;
   }
@@ -9,9 +9,15 @@ void SnakeGame::tick(Direction dir, Direction /*rightDir*/,
   auto head = snake_.front();
   Pos newHead = head(dir_);
 
-  if (std::find(snake_.begin(), snake_.end(), newHead) != snake_.end()) {
-    Console.printf("Bit itself ! %d", dir_);
-    // biting itself
+  // END GAME conditions
+
+  bool bitItself{std::find(snake_.begin(), snake_.end(), newHead) !=
+                 snake_.end()};
+  auto mx = display_->max();
+  bool hitEdge{newHead.c < 0 || newHead.c >= mx.c || newHead.r < 0 ||
+               newHead.r >= mx.r};
+  if (bitItself || hitEdge) {
+    endGame(gamePad);
     init();
     return;
   }
@@ -23,9 +29,25 @@ void SnakeGame::tick(Direction dir, Direction /*rightDir*/,
 }
 
 void SnakeGame::init() {
+  display_->off();
   dir_ = Direction::RIGHT;
   snake_ = std::vector<Pos>{{3, 0}, {2, 0}, {1, 0}, {0, 0}};
   paint(4);
+}
+
+void SnakeGame::endGame(GamepadPtr gamePad) {
+  if (gamePad) {
+    gamePad->setRumble(0xc0 /* force */, 0xc0 /* duration */);
+  }
+  display_->off();
+  delay(500);
+  display_->turnOnHalf(true);
+
+  delay(500);
+  display_->off();
+  display_->turnOnHalf(false);
+  delay(500);
+  display_->off();
 }
 
 void SnakeGame::paint(int grey) {

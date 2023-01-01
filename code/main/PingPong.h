@@ -7,7 +7,7 @@
 class Paddle {
   int size_;
   int col_;  // column is fixed
-  int pos_;
+  int pos_{0};
   int max_;      // max vertical size of the column
   int grey_{3};  // grey shade 0 .. display.maxGrey()
   int speed_{0};
@@ -17,7 +17,9 @@ class Paddle {
  public:
   // initialise in the middle
   explicit Paddle(int size, int col, int max)
-      : size_{size}, col_{col}, pos_{(max - size) / 2}, max_{max} {}
+      : size_{size}, col_{col}, max_{max} {
+    reset();
+  }
 
   // @return new position
   void move(int delta, std::shared_ptr<IDisplay> display);
@@ -25,6 +27,8 @@ class Paddle {
   bool contains(Pos point);
 
   int speed() { return speed_; }
+
+  void reset();
 };
 
 enum class BallTickResult { OK, LEFT_LOST, RIGHT_LOST };
@@ -85,21 +89,22 @@ class PingPongGame : public IGame {
   Ball ball_;
   std::shared_ptr<Paddle> leftPaddle_;
   std::shared_ptr<Paddle> rightPaddle_;
-  std::shared_ptr<IDisplay> display_;
   Score score_;
 
   static constexpr int PADDLE_SIZE{4};
 
-  void restart(bool leftWins, GamepadPtr gamePad);
+  void finish(bool leftWins, GamepadPtr gamePad);
 
  public:
   explicit PingPongGame(std::shared_ptr<IDisplay> display)
-      : ball_{std::move(display->max()), 0, display->max().r - 1, PADDLE_SIZE},
+      : IGame(display),
+        ball_{std::move(display->max()), 0, display->max().r - 1, PADDLE_SIZE},
         leftPaddle_{std::make_shared<Paddle>(PADDLE_SIZE, 0, display->max().c)},
         rightPaddle_{std::make_shared<Paddle>(PADDLE_SIZE, display->max().r - 1,
-                                              display->max().c)},
-        display_{std::move(display)} {}
+                                              display->max().c)} {}
 
   void tick(Direction joyLeft, Direction joyRight, GamepadPtr gamePadLeft,
             GamepadPtr gamePadRight) override;
+
+  void init() override;
 };

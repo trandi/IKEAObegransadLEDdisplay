@@ -9,18 +9,19 @@
 
 class SnakeGame : public IGame {
   std::vector<Pos> snake_;
-  std::shared_ptr<IDisplay> display_;
   Direction dir_;
 
-  void init();
+  void endGame(GamepadPtr gamePad);
   void paint(int grey);
 
  public:
   explicit SnakeGame(std::shared_ptr<IDisplay> display)
-      : display_{std::move(display)} {
+      : IGame{std::move(display)} {
     init();
   }
 
   void tick(Direction leftDir, Direction rightDir, GamepadPtr gamePadLeft,
             GamepadPtr gamePadRight) override;
+
+  void init() override;
 };
