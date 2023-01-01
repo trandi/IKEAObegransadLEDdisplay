@@ -49,7 +49,7 @@ TaskHandle_t dispRefreshHandle;
 
 GamepadPtr myGamepads[BP32_MAX_GAMEPADS];
 std::shared_ptr<IDisplay> display{std::make_shared<ObegransadDisplay>()};
-auto game = std::make_shared<PingPongGame>(display);
+auto game = std::make_shared<SnakeGame>(display);
 
 void dispRefresh(void* arg) {
   Console.printf("~~~~~ Display refresh running on core: %d\n",
