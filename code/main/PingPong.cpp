@@ -1,12 +1,31 @@
 #include "PingPong.h"
 
-void Paddle::paint(int grey, std::shared_ptr<Display> display) {
+namespace {
+
+int toPaddleDelta(Direction dir) {
+  switch (dir) {
+    case Direction::UP:
+      return 1;
+    case Direction::LEFT:
+      return 1;
+    case Direction::DOWN:
+      return -1;
+    case Direction::RIGHT:
+      return -1;
+    default:
+      return 0;
+  }
+}
+
+}  // namespace
+
+void Paddle::paint(int grey, std::shared_ptr<IDisplay> display) {
   for (int i = pos_; i < pos_ + size_; i++) {
     display->setPixel({col_, i}, grey);
   }
 }
 
-void Paddle::move(int delta, std::shared_ptr<Display> display) {
+void Paddle::move(int delta, std::shared_ptr<IDisplay> display) {
   paint(0, display);  // remove
 
   // move
@@ -29,7 +48,7 @@ void Ball::reset() {
 
 BallTickResult Ball::tick(std::shared_ptr<Paddle> leftPaddle,
                           std::shared_ptr<Paddle> rightPaddle,
-                          std::shared_ptr<Display> display) {
+                          std::shared_ptr<IDisplay> display) {
   display->setPixel(pos_, 0);  // remove
 
   Pos newPos{pos_ + speed_};
@@ -70,10 +89,10 @@ BallTickResult Ball::tick(std::shared_ptr<Paddle> leftPaddle,
   return BallTickResult::OK;
 }
 
-void PingPongGame::tick(int joyLeft, int joyRight, GamepadPtr gamePadLeft,
-                        GamepadPtr gamePadRight) {
-  leftPaddle_->move(joyLeft, display_);
-  rightPaddle_->move(joyRight, display_);
+void PingPongGame::tick(Direction joyLeft, Direction joyRight,
+                        GamepadPtr gamePadLeft, GamepadPtr gamePadRight) {
+  leftPaddle_->move(toPaddleDelta(joyLeft), display_);
+  rightPaddle_->move(toPaddleDelta(joyRight), display_);
 
   auto ballTickResult = ball_.tick(leftPaddle_, rightPaddle_, display_);
   if (ballTickResult != BallTickResult::OK) {
@@ -92,13 +111,15 @@ void PingPongGame::tick(int joyLeft, int joyRight, GamepadPtr gamePadLeft,
   }
 }
 
-void Score::display(std::shared_ptr<Display> display) {
+void Score::display(std::shared_ptr<IDisplay> display) {
   for (int i = 0; i < left_; i++) {
     display->setPixel({1 + i, 0}, GREY);
   }
 
+  auto maxCols = display->max().c;
+
   for (int i = 0; i < right_; i++) {
-    display->setPixel({Display::COLS - 2 - i, 0}, GREY);
+    display->setPixel({maxCols - 2 - i, 0}, GREY);
   }
 }
 

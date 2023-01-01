@@ -1,4 +1,4 @@
-#include "Display.h"
+#include "ObegransadDisplay.h"
 
 namespace {
 
@@ -13,19 +13,6 @@ constexpr uint8_t PIN_DATA{26};
 constexpr uint8_t PIN_CLK{25};
 constexpr uint8_t PIN_LATCH{33};
 constexpr uint8_t PIN_ENABLE{32};
-
-std::unordered_map<int, Pos> convertPositions() {
-  std::unordered_map<int, Pos> orderToPosition;
-
-  for (int c = 0; c < Display::COLS; c++) {
-    for (int r = 0; r < Display::ROWS; r++) {
-      auto order = Display::POSITIONS[c * Display::ROWS + r];
-      orderToPosition[order] = {c, r};
-    }
-  }
-
-  return orderToPosition;
-}
 
 void latch() {
   digitalWrite(PIN_LATCH, HIGH);
@@ -48,14 +35,27 @@ void sendData(std::vector<std::vector<int>>& buff,
 
 }  // namespace
 
-Display::Display() : orderToPosition_(convertPositions()) {
+std::unordered_map<int, Pos> ObegransadDisplay::convertPositions() {
+  std::unordered_map<int, Pos> orderToPosition;
+
+  for (int c = 0; c < COLS; c++) {
+    for (int r = 0; r < ROWS; r++) {
+      auto order = POSITIONS[c * ROWS + r];
+      orderToPosition[order] = {c, r};
+    }
+  }
+
+  return orderToPosition;
+}
+
+ObegransadDisplay::ObegransadDisplay() : orderToPosition_(convertPositions()) {
   pinMode(PIN_LATCH, OUTPUT);
   pinMode(PIN_CLK, OUTPUT);
   pinMode(PIN_DATA, OUTPUT);
   pinMode(PIN_ENABLE, OUTPUT);
 }
 
-bool Display::setPixel(Pos pos, int greyValue) {
+bool ObegransadDisplay::setPixel(const Pos& pos, int greyValue) {
   // validate input
   if (pos.r < 0 || pos.r >= ROWS || pos.c < 0 || pos.c >= COLS ||
       greyValue < 0 || greyValue > MAX_GREY_LEVEL) {
@@ -67,7 +67,7 @@ bool Display::setPixel(Pos pos, int greyValue) {
   return true;
 }
 
-void Display::refresh() {
+void ObegransadDisplay::refresh() {
   std::vector<std::vector<int>> buff{buffer_};
 
   for (auto pass = 0; pass < MAX_GREY_LEVEL; pass++) {
@@ -77,7 +77,7 @@ void Display::refresh() {
   }
 }
 
-void Display::off() {
+void ObegransadDisplay::off() {
   for (int c = 0; c < COLS; c++) {
     for (int r = 0; r < ROWS; r++) {
       setPixel({c, r}, 0);
@@ -85,7 +85,7 @@ void Display::off() {
   }
 }
 
-void Display::turnOnHalf(bool left) {
+void ObegransadDisplay::turnOnHalf(bool left) {
   for (int c = 0; c < COLS; c++) {
     for (int r = 0; r < ROWS; r++) {
       if (c <= COLS / 2) {
@@ -95,18 +95,4 @@ void Display::turnOnHalf(bool left) {
       }
     }
   }
-}
-
-Pos Pos::operator+(Pos another) {
-  return {.c = c + another.c, .r = r + another.r};
-}
-
-Pos Pos::operator()(Direction dir) {
-  switch (dir) {
-    case Direction::UP:
-      return {.c = c, .r = r - 1};
-
-    default:
-      return *this;
-  };
 }

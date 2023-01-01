@@ -1,23 +1,14 @@
 #pragma once
-
 #include <Arduino.h>
 
 #include <unordered_map>
 
-enum class Direction { UP, DOWN, LEFT, RIGHT, NONE };
+#include "IDisplay.h"
 
-struct Pos {
-  int c;
-  int r;
-
-  Pos operator()(Direction dir);
-
-  Pos operator+(Pos another);
-};
-
-struct Display {
+class ObegransadDisplay : public IDisplay {
   constexpr static int MAX_GREY_LEVEL{8};
   constexpr static int ROWS{16}, COLS{16};
+
   // clang-format off
   constexpr static int POSITIONS[ROWS * COLS] = {  
       0x17, 0x16, 0x15, 0x14, 0x13, 0x12, 0x11, 0x10, 0x07, 0x06, 0x05, 0x04, 0x03, 0x02, 0x01, 0x00,
@@ -39,26 +30,8 @@ struct Display {
     };
   // clang-format on 
 
-  explicit Display();
 
-  Display(const Display&) = delete;             // remove copy constructor
-  Display& operator=(const Display&) = delete;  // remove assignment  operator
-  Display(Display&&) = delete;                  // remove move constructor
-  Display& operator=(Display&&) = delete;  // remove move assignment operator
-
-  // grey value : 0 = off -> MAX_GREY_LEVEL fully on
-  // @return false if input out of range
-  bool setPixel(Pos pos, int greyValue);
-
-  void off();
-
-  void turnOnHalf(bool left);
-
-  // does the MAX_GREY_LEVEL passes generating the nuances of grey
-  void refresh();
-
-
- private:
+  static std::unordered_map<int, Pos> convertPositions();
 
   // order in which needs to be sent to the display -> (row, col)
   const std::unordered_map<int, Pos>
@@ -66,4 +39,30 @@ struct Display {
 
   std::vector<std::vector<int>> buffer_{ROWS, std::vector<int>(COLS, 0)};
 
+public:
+
+  explicit ObegransadDisplay();
+
+  ObegransadDisplay(const ObegransadDisplay&) = delete;             // remove copy constructor
+  ObegransadDisplay& operator=(const ObegransadDisplay&) = delete;  // remove assignment  operator
+  ObegransadDisplay(ObegransadDisplay&&) = delete;                  // remove move constructor
+  ObegransadDisplay& operator=(ObegransadDisplay&&) = delete;  // remove move assignment operator
+
+
+  bool setPixel(const Pos& pos, int greyValue) override;
+
+  void off() override;
+
+  void turnOnHalf(bool left) override;
+
+  // does the MAX_GREY_LEVEL passes generating the nuances of grey
+  void refresh() override;
+
+  Pos max() override {
+    return {COLS, ROWS};
+  }
+
+  int maxGrey() override {
+    return MAX_GREY_LEVEL;
+  }
 };

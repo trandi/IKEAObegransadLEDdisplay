@@ -9,8 +9,9 @@
 #include <memory>
 
 /********************/
-#include "Display.h"
+#include "ObegransadDisplay.h"
 #include "PingPong.h"
+#include "Snake.h"
 
 // struct Ball {
 //   explicit Ball(std::shared_ptr<Display> disp) : display(std::move(disp)) {
@@ -47,8 +48,8 @@ constexpr int BUTTON_B_MASK{0x04};
 TaskHandle_t dispRefreshHandle;
 
 GamepadPtr myGamepads[BP32_MAX_GAMEPADS];
-auto display{std::make_shared<Display>()};
-PingPongGame ppongGame{{Display::COLS, Display::ROWS}, display};
+std::shared_ptr<IDisplay> display{std::make_shared<ObegransadDisplay>()};
+auto game = std::make_shared<PingPongGame>(display);
 
 void dispRefresh(void* arg) {
   Console.printf("~~~~~ Display refresh running on core: %d\n",
@@ -104,17 +105,22 @@ void onDisconnectedGamepad(GamepadPtr gp) {
 
 namespace {
 
-int delta(GamepadPtr gamePad) {
-  if (gamePad->dpad() & DPAD_UP || gamePad->dpad() & DPAD_LEFT ||
-      gamePad->x()) {
-    return 1;
+Direction dPadDirection(GamepadPtr gamePad) {
+  if (gamePad->dpad() & DPAD_UP || gamePad->x()) {
+    return Direction::UP;
   }
-  if (gamePad->dpad() & DPAD_DOWN || gamePad->dpad() & DPAD_RIGHT ||
-      gamePad->b()) {
-    return -1;
+  if (gamePad->dpad() & DPAD_DOWN || gamePad->b()) {
+    return Direction::DOWN;
   }
 
-  return 0;
+  if (gamePad->dpad() & DPAD_LEFT || gamePad->y()) {
+    return Direction::LEFT;
+  }
+  if (gamePad->dpad() & DPAD_RIGHT || gamePad->a()) {
+    return Direction::RIGHT;
+  }
+
+  return Direction::NONE;
 }
 
 }  // namespace
@@ -155,10 +161,10 @@ void loop() {
   GamepadPtr gamePadLeft = myGamepads[0];
   GamepadPtr gamePadRight = myGamepads[1];
 
-  int leftDelta{0}, rightDelta{0};
+  Direction leftDir{Direction::NONE}, rightDir{Direction::NONE};
 
   if (gamePadLeft && gamePadLeft->isConnected()) {
-    leftDelta = delta(gamePadLeft);
+    leftDir = dPadDirection(gamePadLeft);
 
     // Console.printf("0000 # LEFT X: %4d Y: %4d, RIGHT X: %4d Y: %4d \n",
     //                gamePadLeft->axisX(), gamePadLeft->axisY(),
@@ -202,10 +208,10 @@ void loop() {
         gamePadRight->miscButtons()  // bitmak of pressed "misc" buttons
     );
 
-    rightDelta = delta(gamePadRight);
+    rightDir = dPadDirection(gamePadRight);
   }
 
-  ppongGame.tick(leftDelta, rightDelta, gamePadLeft, gamePadRight);
+  game->tick(leftDir, rightDir, gamePadLeft, gamePadRight);
 
   delay(100);
 }

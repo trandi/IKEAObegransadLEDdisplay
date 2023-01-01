@@ -1,20 +1,18 @@
 #pragma once
 
-#include <Bluepad32.h>
-
 #include <memory>
 
-#include "Display.h"
+#include "IGame.h"
 
 class Paddle {
   int size_;
   int col_;  // column is fixed
   int pos_;
   int max_;      // max vertical size of the column
-  int grey_{3};  // grey shade 0 .. Display::MAX_GREY_LEVEL
+  int grey_{3};  // grey shade 0 .. display.maxGrey()
   int speed_{0};
 
-  void paint(int grey, std::shared_ptr<Display> display);
+  void paint(int grey, std::shared_ptr<IDisplay> display);
 
  public:
   // initialise in the middle
@@ -22,7 +20,7 @@ class Paddle {
       : size_{size}, col_{col}, pos_{(max - size) / 2}, max_{max} {}
 
   // @return new position
-  void move(int delta, std::shared_ptr<Display> display);
+  void move(int delta, std::shared_ptr<IDisplay> display);
 
   bool contains(Pos point);
 
@@ -52,7 +50,7 @@ class Ball {
   // @return true if point lost
   BallTickResult tick(std::shared_ptr<Paddle> leftPaddle,
                       std::shared_ptr<Paddle> rightPaddle,
-                      std::shared_ptr<Display> display);
+                      std::shared_ptr<IDisplay> display);
 
   void reset();
 };
@@ -75,7 +73,7 @@ class Score {
     return right_ == MAX;
   }
 
-  void display(std::shared_ptr<Display> display);
+  void display(std::shared_ptr<IDisplay> display);
 
   void reset() {
     left_ = 0;
@@ -83,26 +81,25 @@ class Score {
   }
 };
 
-class PingPongGame {
+class PingPongGame : public IGame {
   Ball ball_;
   std::shared_ptr<Paddle> leftPaddle_;
   std::shared_ptr<Paddle> rightPaddle_;
-  Pos max_;
-  std::shared_ptr<Display> display_;
+  std::shared_ptr<IDisplay> display_;
   Score score_;
 
   static constexpr int PADDLE_SIZE{4};
 
+  void restart(bool leftWins, GamepadPtr gamePad);
+
  public:
-  explicit PingPongGame(Pos max, std::shared_ptr<Display> display)
-      : ball_{max, 0, max.r - 1, PADDLE_SIZE},
-        leftPaddle_{std::make_shared<Paddle>(PADDLE_SIZE, 0, max.c)},
-        rightPaddle_{std::make_shared<Paddle>(PADDLE_SIZE, max.r - 1, max.c)},
-        max_{std::move(max)},
+  explicit PingPongGame(std::shared_ptr<IDisplay> display)
+      : ball_{std::move(display->max()), 0, display->max().r - 1, PADDLE_SIZE},
+        leftPaddle_{std::make_shared<Paddle>(PADDLE_SIZE, 0, display->max().c)},
+        rightPaddle_{std::make_shared<Paddle>(PADDLE_SIZE, display->max().r - 1,
+                                              display->max().c)},
         display_{std::move(display)} {}
 
-  void tick(int joyLeft, int joyRight, GamepadPtr gamePadLeft,
-            GamepadPtr gamePadRight);
-
-  void restart(bool leftWins, GamepadPtr gamePadt);
+  void tick(Direction joyLeft, Direction joyRight, GamepadPtr gamePadLeft,
+            GamepadPtr gamePadRight) override;
 };
