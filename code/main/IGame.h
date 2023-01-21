@@ -9,6 +9,9 @@ struct IGame {
                     GamepadPtr gamePadLeft, GamepadPtr gamePadRight) = 0;
   virtual void init() = 0;
 
+  // from 1 to 10. The higher the faster
+  virtual int gameSpeed() = 0;
+
  protected:
   std::shared_ptr<IDisplay> display_;
 

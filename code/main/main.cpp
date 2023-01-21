@@ -149,5 +149,5 @@ void loop() {
   games[gameIdx]->tick(dPadDirection(gamePadLeft), dPadDirection(gamePadRight),
                        gamePadLeft, gamePadRight);
 
-  delay(100);
+  delay(200 - games[gameIdx]->gameSpeed() * 10);
 }

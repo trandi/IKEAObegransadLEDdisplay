@@ -23,7 +23,15 @@ void SnakeGame::tick(Direction dir, Direction /*rightDir*/, GamepadPtr gamePad,
   }
 
   paint(0);  // remove
-  snake_.pop_back();
+
+  // Prey
+  if (newHead == prey_) {
+    prey_ = randomPos();
+    gameSpeed_ += 1;
+  } else {
+    snake_.pop_back();
+  }
+
   snake_.insert(snake_.begin(), std::move(newHead));
   paint(4);  // repaint
 }
@@ -33,6 +41,9 @@ void SnakeGame::init() {
   dir_ = Direction::RIGHT;
   snake_ = std::vector<Pos>{{3, 0}, {2, 0}, {1, 0}, {0, 0}};
   paint(4);
+
+  gameSpeed_ = 1;
+  prey_ = randomPos();
 }
 
 void SnakeGame::endGame(GamepadPtr gamePad) {
@@ -54,4 +65,16 @@ void SnakeGame::paint(int grey) {
   for (const auto& pos : snake_) {
     display_->setPixel(pos, grey);
   }
+}
+
+Pos SnakeGame::randomPos() {
+  Pos p{.c = distC_(gen_), .r = distR_(gen_)};
+  bool onTheSnake = std::find(snake_.begin(), snake_.end(), p) != snake_.end();
+  if (onTheSnake) {
+    return randomPos();
+  }
+
+  display_->setPixel(p, 7);
+
+  return p;
 }

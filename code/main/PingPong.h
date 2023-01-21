@@ -107,4 +107,6 @@ class PingPongGame : public IGame {
             GamepadPtr gamePadRight) override;
 
   void init() override;
+
+  int gameSpeed() override { return 1; }
 };
