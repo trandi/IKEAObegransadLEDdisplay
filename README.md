@@ -23,4 +23,4 @@ To set up:
 - `idf.py -p /dev/ttyUSB0 flash`
 
 
-## More and ability to see it in action [details on my blog](https://trandi.wordpress.com/2022/12/24/game-on-ikea-obergransad-led-display/)
+## More and ability to see it in action [details on my blog](https://trandi.wordpress.com/2022/12/24/game-on-ikea-obergransad-led-display/) as well as a nice [video of the final result](https://trandi.wordpress.com/2023/01/23/retro-game-on-ikea-obegransad-led-display-part-2/).
