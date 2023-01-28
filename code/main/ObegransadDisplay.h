@@ -37,32 +37,19 @@ class ObegransadDisplay : public IDisplay {
   const std::unordered_map<int, Pos>
       orderToPosition_;
 
-  std::vector<std::vector<int>> buffer_{ROWS, std::vector<int>(COLS, 0)};
+  
 
 public:
 
   explicit ObegransadDisplay();
 
-  ObegransadDisplay(const ObegransadDisplay&) = delete;             // remove copy constructor
-  ObegransadDisplay& operator=(const ObegransadDisplay&) = delete;  // remove assignment  operator
-  ObegransadDisplay(ObegransadDisplay&&) = delete;                  // remove move constructor
-  ObegransadDisplay& operator=(ObegransadDisplay&&) = delete;  // remove move assignment operator
+  // remove copy & move
+  ObegransadDisplay(const ObegransadDisplay&) = delete;           
+  ObegransadDisplay& operator=(const ObegransadDisplay&) = delete; 
+  ObegransadDisplay(ObegransadDisplay&&) = delete;                  
+  ObegransadDisplay& operator=(ObegransadDisplay&&) = delete;  
 
-
-  bool setPixel(const Pos& pos, int greyValue) override;
-
-  void off() override;
-
-  void turnOnHalf(bool left) override;
 
   // does the MAX_GREY_LEVEL passes generating the nuances of grey
   void refresh() override;
-
-  Pos max() override {
-    return {COLS, ROWS};
-  }
-
-  int maxGrey() override {
-    return MAX_GREY_LEVEL;
-  }
 };

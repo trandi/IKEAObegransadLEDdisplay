@@ -48,23 +48,13 @@ std::unordered_map<int, Pos> ObegransadDisplay::convertPositions() {
   return orderToPosition;
 }
 
-ObegransadDisplay::ObegransadDisplay() : orderToPosition_(convertPositions()) {
+ObegransadDisplay::ObegransadDisplay()
+    : IDisplay({COLS, ROWS}, MAX_GREY_LEVEL),
+      orderToPosition_(convertPositions()) {
   pinMode(PIN_LATCH, OUTPUT);
   pinMode(PIN_CLK, OUTPUT);
   pinMode(PIN_DATA, OUTPUT);
   pinMode(PIN_ENABLE, OUTPUT);
-}
-
-bool ObegransadDisplay::setPixel(const Pos& pos, int greyValue) {
-  // validate input
-  if (pos.r < 0 || pos.r >= ROWS || pos.c < 0 || pos.c >= COLS ||
-      greyValue < 0 || greyValue > MAX_GREY_LEVEL) {
-    return false;
-  }
-
-  buffer_[pos.c][pos.r] = greyValue;
-
-  return true;
 }
 
 void ObegransadDisplay::refresh() {
@@ -74,25 +64,5 @@ void ObegransadDisplay::refresh() {
     sendData(buff, orderToPosition_);
 
     latch();
-  }
-}
-
-void ObegransadDisplay::off() {
-  for (int c = 0; c < COLS; c++) {
-    for (int r = 0; r < ROWS; r++) {
-      setPixel({c, r}, 0);
-    }
-  }
-}
-
-void ObegransadDisplay::turnOnHalf(bool left) {
-  for (int c = 0; c < COLS; c++) {
-    for (int r = 0; r < ROWS; r++) {
-      if (c <= COLS / 2) {
-        setPixel({c, r}, left ? 1 : 0);
-      } else {
-        setPixel({c, r}, left ? 0 : 1);
-      }
-    }
   }
 }

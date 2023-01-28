@@ -1,5 +1,7 @@
 #pragma once
 
+#include <vector>
+
 enum class Direction { UP, DOWN, LEFT, RIGHT, NONE };
 
 struct Pos {
@@ -13,19 +15,32 @@ struct Pos {
   bool operator==(const Pos& another);
 };
 
-struct IDisplay {
+class IDisplay {
+  const Pos max_;
+  const int maxGrey_;
+
+ protected:
+  std::vector<std::vector<int>> buffer_;
+
+  explicit IDisplay(const Pos& max, int maxGrey)
+      : max_{max},
+        maxGrey_{maxGrey},
+        buffer_{
+            std::vector<std::vector<int>>(max.r, std::vector<int>(max.c, 0))} {}
+
+ public:
   // grey value : 0 = off -> MAX_GREY_LEVEL fully on
   // @return false if input out of range
-  virtual bool setPixel(const Pos& pos, int greyValue);
+  bool setPixel(const Pos& pos, int greyValue);
 
-  virtual void off();
+  Pos max() { return max_; }
 
-  virtual void turnOnHalf(bool left);
+  int maxGrey() { return maxGrey_; }
+
+  void off();
+
+  void turnOnHalf(bool left);
 
   // does the MAX_GREY_LEVEL passes generating the nuances of grey
-  virtual void refresh();
-
-  virtual Pos max();
-
-  virtual int maxGrey();
+  virtual void refresh() = 0;
 };
